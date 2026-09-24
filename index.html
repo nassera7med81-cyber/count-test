@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<!-- saved from url=(0045)file:///D:/Downloads/count_mobile_test_1.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Count Mobile Test</title>
+<style>
+:root{
+    --paper:#e9ecef;
+    --card:#ffffff;
+    --ink:#1b1f24;
+    --soft:#5a636d;
+    --rule:#cfd5db;
+    --label:#f2c230;
+    --pass:#1f7a4a;
+    --fail:#b3261e;
+    --warn:#9a6b00;
+    --field:#f5f7f9;
+    color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+        --paper:#15181c; --card:#1f2429; --ink:#eef1f4; --soft:#a4adb7; --rule:#343b43;
+        --label:#f2c230; --pass:#4cc38a; --fail:#ff7a70; --warn:#e3b341; --field:#262c32;
+        color-scheme:dark;
+    }
+}
+:root[data-theme="dark"]{
+    --paper:#15181c; --card:#1f2429; --ink:#eef1f4; --soft:#a4adb7; --rule:#343b43;
+    --label:#f2c230; --pass:#4cc38a; --fail:#ff7a70; --warn:#e3b341; --field:#262c32;
+    color-scheme:dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none !important}
+body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+.cond{font-family:"Bahnschrift","DIN Alternate","Roboto Condensed","sans-serif-condensed","Arial Narrow",sans-serif}
+main{max-width:560px;margin:0 auto;padding:14px 14px 40px}
+h1{font-size:26px;line-height:1.1;margin:6px 0 2px;font-weight:700;letter-spacing:.2px}
+.sub{margin:0 0 14px;color:var(--soft);font-size:14.5px}
+h2{font-size:19px;margin:0 0 8px;font-weight:700}
+section{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:14px;margin-bottom:12px}
+p{margin:0 0 10px}
+.muted{color:var(--soft);font-size:14px}
+
+/* camera: the one bold element */
+.viewport{
+    position:relative;background:#0e1114;border-radius:8px;overflow:hidden;
+    aspect-ratio:3/4;max-height:62vh;width:100%;
+}
+.viewport video,.viewport img{width:100%;height:100%;object-fit:cover;display:block}
+.viewport .frame{position:absolute;inset:14%;pointer-events:none}
+.viewport .frame::before,.viewport .frame::after{
+    content:"";position:absolute;width:34px;height:34px;border:4px solid var(--label)
+}
+.viewport .frame::before{left:0;top:0;border-right:0;border-bottom:0}
+.viewport .frame::after{right:0;bottom:0;border-left:0;border-top:0}
+.viewport .idle{position:absolute;inset:0;display:grid;place-items:center;color:#c6ccd3;text-align:center;padding:24px;font-size:15px}
+.readout{
+    margin-top:10px;background:var(--label);color:#1b1f24;border-radius:6px;
+    padding:10px 12px;font-size:22px;font-weight:700;min-height:48px;word-break:break-all
+}
+.readout small{display:block;font-size:12.5px;font-weight:600;opacity:.75}
+
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+button,.filebtn{
+    appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--card);
+    border-radius:8px;padding:12px 14px;font:inherit;font-weight:650;cursor:pointer;
+    min-height:46px;flex:1 1 auto;text-align:center
+}
+button.ghost,.filebtn.ghost{background:transparent;color:var(--ink)}
+button:disabled{opacity:.4}
+button:focus-visible,.filebtn:focus-within,input:focus-visible{outline:3px solid var(--label);outline-offset:2px}
+.filebtn input{display:none}
+
+/* result tags, styled like shelf labels */
+.tags{display:grid;gap:8px}
+.tag{
+    display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;
+    border:1px solid var(--rule);border-left:6px solid var(--rule);border-radius:6px;padding:9px 11px;background:var(--field)
+}
+.tag .name{font-weight:650}
+.tag .why{font-size:13px;color:var(--soft);grid-column:1/-1;margin-top:-4px}
+.tag .state{font-weight:700;font-size:14px}
+.tag.pass{border-left-color:var(--pass)} .tag.pass .state{color:var(--pass)}
+.tag.fail{border-left-color:var(--fail)} .tag.fail .state{color:var(--fail)}
+.tag.warn{border-left-color:var(--warn)} .tag.warn .state{color:var(--warn)}
+
+.photo{max-width:100%;border-radius:6px;display:block;margin-top:10px;border:1px solid var(--rule)}
+
+/* mini count screen */
+input[type=search],input[type=number]{
+    width:100%;font:inherit;font-size:17px;padding:12px;border:1px solid var(--rule);border-radius:8px;
+    background:var(--field);color:var(--ink)
+}
+.results{margin-top:8px;display:grid;gap:6px}
+.item{
+    display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px;border:1px solid var(--rule);
+    border-radius:8px;background:var(--field);text-align:left;color:var(--ink);font-weight:400
+}
+.item b{font-size:16px}
+.item span{color:var(--soft);font-size:13.5px}
+.item.sel{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.qty{display:grid;grid-template-columns:56px 1fr 56px;gap:8px;margin-top:10px}
+.qty button{font-size:24px;padding:0}
+.qty input{text-align:center;font-size:24px;font-weight:700}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14.5px}
+td,th{padding:7px 4px;border-bottom:1px solid var(--rule);text-align:left}
+th{font-size:13px;color:var(--soft);font-weight:600}
+td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+pre{white-space:pre-wrap;background:var(--field);border:1px solid var(--rule);border-radius:8px;padding:10px;font-size:13px;margin:10px 0 0}
+</style>
+</head>
+<body>
+<main>
+    <h1 class="cond">Count mobile test</h1>
+    <p class="sub">Checks whether this phone can run the count app: live camera, barcode reading, photo quality and a sample count screen.</p>
+
+    <section aria-labelledby="camH">
+        <h2 id="camH" class="cond">Live camera</h2>
+        <div class="viewport" id="viewport">
+            <video id="video" playsinline="" muted="" hidden=""></video>
+            <div class="frame" id="frame" hidden=""></div>
+            <div class="idle" id="idle">Tap "Start camera". Your phone will ask for permission.</div>
+        </div>
+        <div class="readout cond" id="readout" hidden=""><small>Barcode</small><span id="code"></span></div>
+        <div class="row">
+            <button id="btnStart">Start camera</button>
+            <button id="btnTorch" class="ghost" disabled="">Torch</button>
+            <button id="btnStop" class="ghost" disabled="">Stop</button>
+        </div>
+    </section>
+
+    <section aria-labelledby="resH">
+        <h2 id="resH" class="cond">Results on this phone</h2>
+        <div class="tags" id="tags"><div class="tag pass"><span class="name">Secure connection (HTTPS)</span><span class="state">Works</span>
+         <span class="why">The live camera is allowed on this page.</span></div><div class="tag pass"><span class="name">Camera access in the browser</span><span class="state">Works</span>
+         <span class="why">Available - tap Start camera to test it.</span></div><div class="tag warn"><span class="name">Built-in barcode reader</span><span class="state">Partial</span>
+         <span class="why">Not in this browser (normal on iPhone). The app would need its own reader.</span></div><div class="tag pass"><span class="name">Offline storage</span><span class="state">Works</span>
+         <span class="why">Counts can be kept on the phone.</span></div></div>
+    </section>
+
+    <section aria-labelledby="phH">
+        <h2 id="phH" class="cond">Photo of a count sheet</h2>
+        <p class="muted">This uses the phone's own camera app, so it works even where the live camera is blocked. Photograph a whole A4 sheet to see if the photo is sharp enough to read.</p>
+        <label class="filebtn" style="display:block">Take photo<input type="file" id="photoIn" accept="image/*" capture="environment"></label>
+        <img class="photo" id="photo" alt="Photo taken for the test" hidden="">
+    </section>
+
+    <section aria-labelledby="ctH">
+        <h2 id="ctH" class="cond">Sample count screen</h2>
+        <p class="muted">Search a part, set the quantity, save. Scanning a barcode above fills the search.</p>
+        <input type="search" id="q" placeholder="Part number or description" autocomplete="off">
+        <div class="results" id="results"></div>
+        <div class="qty">
+            <button id="minus" aria-label="Less">−</button>
+            <input type="number" id="qty" value="1" min="0" inputmode="decimal" aria-label="Quantity">
+            <button id="plus" aria-label="More">+</button>
+        </div>
+        <div class="row"><button id="btnSave" disabled="">Save count</button></div>
+        <table id="log" hidden=""><thead><tr><th>Part</th><th>Time</th><th style="text-align:right">Qty</th></tr></thead><tbody></tbody></table>
+    </section>
+
+    <section aria-labelledby="repH">
+        <h2 id="repH" class="cond">Send me the result</h2>
+        <p class="muted">Copy this report and paste it in the chat.</p>
+        <div class="row"><button id="btnCopy">Copy test report</button></div>
+        <pre id="report">COUNT MOBILE TEST
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0
+
+PASS  Secure connection (HTTPS) - The live camera is allowed on this page.
+PASS  Camera access in the browser - Available - tap Start camera to test it.
+WARN  Built-in barcode reader - Not in this browser (normal on iPhone). The app would need its own reader.
+PASS  Offline storage - Counts can be kept on the phone.</pre>
+    </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const results = {};           /* name -> {state, detail} */
+let stream = null, track = null, detector = null, scanTimer = null, torchOn = false;
+
+function tag(name, state, detail){
+    results[name] = {state, detail};
+    renderTags();
+}
+function renderTags(){
+    const label = {pass:"Works", fail:"Blocked", warn:"Partial", info:"Info"};
+    $("tags").innerHTML = Object.entries(results).map(([n,r]) =>
+        `<div class="tag ${r.state}"><span class="name">${n}</span><span class="state">${label[r.state]||""}</span>
+         ${r.detail?`<span class="why">${r.detail}</span>`:""}</div>`).join("");
+    renderReport();
+}
+function renderReport(){
+    const lines = ["COUNT MOBILE TEST", navigator.userAgent, ""];
+    for(const [n,r] of Object.entries(results)) lines.push(`${r.state.toUpperCase().padEnd(5)} ${n}${r.detail?" - "+r.detail:""}`);
+    $("report").textContent = lines.join("\n");
+}
+
+/* ---------- static checks ---------- */
+(function initialChecks(){
+    tag("Secure connection (HTTPS)", window.isSecureContext ? "pass" : "fail",
+        window.isSecureContext ? "The live camera is allowed on this page." : "Browsers block the live camera without HTTPS.");
+    const gum = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    tag("Camera access in the browser", gum ? "pass" : "fail", gum ? "Available - tap Start camera to test it." : "This browser cannot open the camera from a web page.");
+    if("BarcodeDetector" in window){
+        BarcodeDetector.getSupportedFormats().then(f=>{
+            tag("Built-in barcode reader", f.length ? "pass" : "warn", f.length ? f.join(", ") : "Present but no formats reported.");
+        }).catch(()=>tag("Built-in barcode reader","warn","Present but could not list formats."));
+    }else{
+        tag("Built-in barcode reader","warn","Not in this browser (normal on iPhone). The app would need its own reader.");
+    }
+    try{ localStorage.setItem("_t","1"); localStorage.removeItem("_t"); tag("Offline storage","pass","Counts can be kept on the phone."); }
+    catch(e){ tag("Offline storage","warn","Storage is blocked here."); }
+})();
+
+/* ---------- live camera ---------- */
+$("btnStart").onclick = async () => {
+    try{
+        stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}, width:{ideal:1920}, height:{ideal:1080}}, audio:false});
+        track = stream.getVideoTracks()[0];
+        const v = $("video");
+        v.srcObject = stream; v.hidden = false; await v.play();
+        $("idle").hidden = true; $("frame").hidden = false;
+        $("btnStop").disabled = false; $("btnStart").disabled = true;
+        const s = track.getSettings();
+        tag("Live camera", "pass", `Running at ${s.width||"?"} x ${s.height||"?"}${s.facingMode?", "+s.facingMode:""}.`);
+        const caps = track.getCapabilities ? track.getCapabilities() : {};
+        if(caps.torch){ $("btnTorch").disabled = false; tag("Torch","pass","Can be switched on from the app."); }
+        else tag("Torch","warn","Not controllable from the browser on this phone.");
+        startScanning();
+    }catch(e){
+        const why = {
+            NotAllowedError: "Permission refused, or the page is embedded where the camera is not allowed.",
+            NotFoundError: "No camera found.",
+            NotReadableError: "The camera is in use by another app.",
+            SecurityError: "Blocked because the page is not on HTTPS."
+        }[e.name] || e.message;
+        tag("Live camera","fail",`${e.name}: ${why}`);
+        $("idle").textContent = "The live camera did not start. The photo test below still works.";
+    }
+};
+$("btnStop").onclick = stopCamera;
+function stopCamera(){
+    if(scanTimer) clearInterval(scanTimer);
+    if(stream) stream.getTracks().forEach(t=>t.stop());
+    stream = track = null;
+    $("video").hidden = true; $("frame").hidden = true; $("idle").hidden = false;
+    $("idle").textContent = "Camera stopped.";
+    $("btnStart").disabled = false; $("btnStop").disabled = true; $("btnTorch").disabled = true;
+}
+$("btnTorch").onclick = async () => {
+    try{ torchOn = !torchOn; await track.applyConstraints({advanced:[{torch:torchOn}]}); }
+    catch(e){ tag("Torch","warn","Switching failed: "+e.message); }
+};
+
+function startScanning(){
+    if(!("BarcodeDetector" in window)) return;
+    try{ detector = new BarcodeDetector(); }catch(e){ return; }
+    let found = false;
+    scanTimer = setInterval(async () => {
+        const v = $("video");
+        if(!v.videoWidth) return;
+        try{
+            const codes = await detector.detect(v);
+            if(codes.length){
+                const c = codes[0];
+                $("readout").hidden = false; $("code").textContent = c.rawValue;
+                if(navigator.vibrate) navigator.vibrate(60);
+                if(!found){ found = true; tag("Barcode read from live camera","pass",`${c.format}: ${c.rawValue}`); }
+                $("q").value = c.rawValue; search();
+            }
+        }catch(e){}
+    }, 350);
+}
+
+/* ---------- photo via the phone's camera app ---------- */
+$("photoIn").onchange = e => {
+    const f = e.target.files[0]; if(!f) return;
+    const url = URL.createObjectURL(f);
+    const img = $("photo");
+    img.onload = () => {
+        const w = Math.max(img.naturalWidth, img.naturalHeight), h = Math.min(img.naturalWidth, img.naturalHeight);
+        /* if the whole A4 sheet fills the photo, long side = 297 mm */
+        const dpi = Math.round(w / (297/25.4));
+        const state = dpi >= 250 ? "pass" : dpi >= 180 ? "warn" : "fail";
+        const note = dpi >= 250 ? "Good enough to read handwriting if the sheet fills the frame."
+                   : dpi >= 180 ? "Borderline - fill the frame with the sheet and hold steady."
+                   : "Too low for reading - a scanner is needed.";
+        tag("Photo resolution", state, `${w} x ${h} px, about ${dpi} dpi across a full A4. ${note}`);
+    };
+    img.src = url; img.hidden = false;
+};
+
+/* ---------- sample count screen ---------- */
+const PARTS = [
+    ["04465-0K290","Brake pad set front"],["90915-YZZD4","Oil filter"],["17801-0C010","Air filter element"],
+    ["88568-60030","Cabin air filter"],["90919-02258","Ignition coil"],["48510-80717","Shock absorber front"],
+    ["43512-60180","Brake disc front"],["16400-0L220","Radiator assembly"],["90916-02585","Fan belt"],
+    ["23300-75140","Fuel filter"],["08880-10705","Engine oil 5W-30 4L"],["85214-42070","Wiper blade 650mm"]
+];
+let selected = null;
+const log = [];
+function norm(s){ return s.toUpperCase().replace(/[^A-Z0-9]/g,""); }
+function search(){
+    const q = $("q").value.trim();
+    if(!q){ $("results").innerHTML=""; return; }
+    const nq = norm(q), lq = q.toLowerCase();
+    const hits = PARTS.filter(([p,d]) => norm(p).includes(nq) || d.toLowerCase().includes(lq)).slice(0,6);
+    $("results").innerHTML = hits.length
+        ? hits.map(([p,d]) => `<button class="item ${selected===p?"sel":""}" data-p="${p}"><b>${p}</b><span>${d}</span></button>`).join("")
+        : `<p class="muted">No part matches "${q.replace(/</g,"&lt;")}". Check the number, or search by description.</p>`;
+    $("results").querySelectorAll(".item").forEach(b => b.onclick = () => { selected = b.dataset.p; $("btnSave").disabled = false; search(); $("qty").focus(); });
+    if(hits.length===1 && selected!==hits[0][0]){ selected = hits[0][0]; $("btnSave").disabled = false; search(); }
+}
+$("q").oninput = () => { selected = null; $("btnSave").disabled = true; search(); };
+$("minus").onclick = () => $("qty").value = Math.max(0, (+$("qty").value||0) - 1);
+$("plus").onclick = () => $("qty").value = (+$("qty").value||0) + 1;
+$("btnSave").onclick = () => {
+    const qty = +$("qty").value;
+    if(!selected || isNaN(qty)) return;
+    log.unshift({p:selected, q:qty, t:new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"})});
+    try{ localStorage.setItem("countTestLog", JSON.stringify(log)); }catch(e){}
+    $("log").hidden = false;
+    $("log").querySelector("tbody").innerHTML = log.map(r=>`<tr><td>${r.p}</td><td>${r.t}</td><td class="n">${r.q}</td></tr>`).join("");
+    $("btnSave").textContent = "Saved"; setTimeout(()=>$("btnSave").textContent="Save count", 900);
+    tag("Sample count screen","pass",`${log.length} count(s) saved on this phone.`);
+    $("q").value=""; selected=null; $("btnSave").disabled=true; $("results").innerHTML=""; $("qty").value=1;
+};
+
+/* ---------- report ---------- */
+$("btnCopy").onclick = async () => {
+    try{ await navigator.clipboard.writeText($("report").textContent); $("btnCopy").textContent="Copied"; }
+    catch(e){
+        const r=document.createRange(); r.selectNodeContents($("report"));
+        const s=getSelection(); s.removeAllRanges(); s.addRange(r);
+        $("btnCopy").textContent="Selected - copy it";
+    }
+    setTimeout(()=>$("btnCopy").textContent="Copy test report",1500);
+};
+</script>
+
+
+</body></html>
