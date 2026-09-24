@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<!-- saved from url=(0045)file:///D:/Downloads/count_mobile_test_1.html -->
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
+<html lang="en">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Count Mobile Test</title>
+<title>Count Mobile Test v2</title>
 <style>
 :root{
     --paper:#e9ecef;
@@ -112,43 +112,78 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14.5px}
 td,th{padding:7px 4px;border-bottom:1px solid var(--rule);text-align:left}
 th{font-size:13px;color:var(--soft);font-weight:600}
 td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.mode{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--ink);border-radius:8px;overflow:hidden;margin-bottom:10px}
+.mode button{border:0;border-radius:0;background:transparent;color:var(--ink);min-height:42px}
+.mode button[aria-pressed="true"]{background:var(--ink);color:var(--card)}
+.band{position:absolute;left:8%;right:8%;top:43%;height:14%;border:3px solid var(--label);border-radius:4px;box-shadow:0 0 0 999px rgba(0,0,0,.35);pointer-events:none}
+.bandHint{position:absolute;left:8%;right:8%;top:calc(57% + 6px);color:#fff;font-size:13px;text-align:center;text-shadow:0 1px 2px #000}
+.cands{display:grid;gap:6px;margin-top:10px}
+.cand{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--field);color:var(--ink);text-align:left;font-weight:400;min-height:52px}
+.cand b{font-size:17px}
+.cand span{font-size:13px;color:var(--soft)}
+.cand .score{font-weight:700;font-size:15px}
+.cand.top{border-color:var(--pass);box-shadow:inset 0 0 0 1px var(--pass)}
+.raw{font-family:ui-monospace,Consolas,monospace;font-size:14px;background:var(--field);border:1px solid var(--rule);border-radius:6px;padding:8px 10px;margin-top:8px;word-break:break-all}
+.crop{display:block;max-width:100%;margin-top:8px;border:1px solid var(--rule);border-radius:4px;image-rendering:pixelated}
+textarea{width:100%;min-height:90px;font:inherit;font-size:15px;padding:10px;border:1px solid var(--rule);border-radius:8px;background:var(--field);color:var(--ink)}
 pre{white-space:pre-wrap;background:var(--field);border:1px solid var(--rule);border-radius:8px;padding:10px;font-size:13px;margin:10px 0 0}
 </style>
 </head>
 <body>
 <main>
     <h1 class="cond">Count mobile test</h1>
-    <p class="sub">Checks whether this phone can run the count app: live camera, barcode reading, photo quality and a sample count screen.</p>
+    <p class="sub">Checks whether this phone can run the count app: live camera, barcode reading, reading printed part numbers, photo quality and a sample count screen.</p>
 
     <section aria-labelledby="camH">
         <h2 id="camH" class="cond">Live camera</h2>
+        <div class="mode" role="group" aria-label="What to read">
+            <button id="modeBar" aria-pressed="true">Barcode</button>
+            <button id="modeText" aria-pressed="false">Part number</button>
+        </div>
         <div class="viewport" id="viewport">
-            <video id="video" playsinline="" muted="" hidden=""></video>
-            <div class="frame" id="frame" hidden=""></div>
+            <video id="video" playsinline muted hidden></video>
+            <div class="frame" id="frame" hidden></div>
+            <div class="band" id="band" hidden></div>
+            <div class="bandHint" id="bandHint" hidden>Fit the part number inside the yellow box</div>
             <div class="idle" id="idle">Tap "Start camera". Your phone will ask for permission.</div>
         </div>
-        <div class="readout cond" id="readout" hidden=""><small>Barcode</small><span id="code"></span></div>
+        <div class="readout cond" id="readout" hidden><small>Barcode</small><span id="code"></span></div>
+        <div class="row" id="readRow" hidden><button id="btnRead">Read part number</button></div>
         <div class="row">
             <button id="btnStart">Start camera</button>
-            <button id="btnTorch" class="ghost" disabled="">Torch</button>
-            <button id="btnStop" class="ghost" disabled="">Stop</button>
+            <button id="btnTorch" class="ghost" disabled>Torch</button>
+            <button id="btnStop" class="ghost" disabled>Stop</button>
         </div>
+    </section>
+
+    <section aria-labelledby="ocrH" id="ocrSec" hidden>
+        <h2 id="ocrH" class="cond">Part number reading</h2>
+        <p class="muted" id="ocrStatus"></p>
+        <canvas class="crop" id="cropView" hidden></canvas>
+        <div class="raw" id="rawText" hidden></div>
+        <div class="cands" id="cands"></div>
     </section>
 
     <section aria-labelledby="resH">
         <h2 id="resH" class="cond">Results on this phone</h2>
-        <div class="tags" id="tags"><div class="tag pass"><span class="name">Secure connection (HTTPS)</span><span class="state">Works</span>
-         <span class="why">The live camera is allowed on this page.</span></div><div class="tag pass"><span class="name">Camera access in the browser</span><span class="state">Works</span>
-         <span class="why">Available - tap Start camera to test it.</span></div><div class="tag warn"><span class="name">Built-in barcode reader</span><span class="state">Partial</span>
-         <span class="why">Not in this browser (normal on iPhone). The app would need its own reader.</span></div><div class="tag pass"><span class="name">Offline storage</span><span class="state">Works</span>
-         <span class="why">Counts can be kept on the phone.</span></div></div>
+        <div class="tags" id="tags"></div>
     </section>
 
     <section aria-labelledby="phH">
         <h2 id="phH" class="cond">Photo of a count sheet</h2>
         <p class="muted">This uses the phone's own camera app, so it works even where the live camera is blocked. Photograph a whole A4 sheet to see if the photo is sharp enough to read.</p>
         <label class="filebtn" style="display:block">Take photo<input type="file" id="photoIn" accept="image/*" capture="environment"></label>
-        <img class="photo" id="photo" alt="Photo taken for the test" hidden="">
+        <img class="photo" id="photo" alt="Photo taken for the test" hidden>
+        <div class="row" id="photoReadRow" hidden><button class="ghost" id="btnPhotoRead">Find part numbers in this photo</button></div>
+    </section>
+
+    <section aria-labelledby="plH">
+        <h2 id="plH" class="cond">Your parts list</h2>
+        <p class="muted" id="plInfo"></p>
+        <p class="muted">Readings are matched against this list. Load your real part numbers to test on your own stock: a CSV or text file with the part number in the first column, or paste them below, one per line.</p>
+        <label class="filebtn ghost" style="display:block">Load CSV or text file<input type="file" id="plFile" accept=".csv,.txt,text/plain,text/csv"></label>
+        <textarea id="plPaste" placeholder="04465-0K290&#10;90915-YZZD4&#10;..." aria-label="Paste part numbers"></textarea>
+        <div class="row"><button id="plSave">Use pasted list</button><button class="ghost" id="plReset">Back to demo list</button></div>
     </section>
 
     <section aria-labelledby="ctH">
@@ -157,25 +192,19 @@ pre{white-space:pre-wrap;background:var(--field);border:1px solid var(--rule);bo
         <input type="search" id="q" placeholder="Part number or description" autocomplete="off">
         <div class="results" id="results"></div>
         <div class="qty">
-            <button id="minus" aria-label="Less">−</button>
+            <button id="minus" aria-label="Less">&minus;</button>
             <input type="number" id="qty" value="1" min="0" inputmode="decimal" aria-label="Quantity">
             <button id="plus" aria-label="More">+</button>
         </div>
-        <div class="row"><button id="btnSave" disabled="">Save count</button></div>
-        <table id="log" hidden=""><thead><tr><th>Part</th><th>Time</th><th style="text-align:right">Qty</th></tr></thead><tbody></tbody></table>
+        <div class="row"><button id="btnSave" disabled>Save count</button></div>
+        <table id="log" hidden><thead><tr><th>Part</th><th>Time</th><th style="text-align:right">Qty</th></tr></thead><tbody></tbody></table>
     </section>
 
     <section aria-labelledby="repH">
         <h2 id="repH" class="cond">Send me the result</h2>
         <p class="muted">Copy this report and paste it in the chat.</p>
         <div class="row"><button id="btnCopy">Copy test report</button></div>
-        <pre id="report">COUNT MOBILE TEST
-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0
-
-PASS  Secure connection (HTTPS) - The live camera is allowed on this page.
-PASS  Camera access in the browser - Available - tap Start camera to test it.
-WARN  Built-in barcode reader - Not in this browser (normal on iPhone). The app would need its own reader.
-PASS  Offline storage - Counts can be kept on the phone.</pre>
+        <pre id="report"></pre>
     </section>
 </main>
 
@@ -225,7 +254,7 @@ $("btnStart").onclick = async () => {
         track = stream.getVideoTracks()[0];
         const v = $("video");
         v.srcObject = stream; v.hidden = false; await v.play();
-        $("idle").hidden = true; $("frame").hidden = false;
+        $("idle").hidden = true; setMode(mode);
         $("btnStop").disabled = false; $("btnStart").disabled = true;
         const s = track.getSettings();
         tag("Live camera", "pass", `Running at ${s.width||"?"} x ${s.height||"?"}${s.facingMode?", "+s.facingMode:""}.`);
@@ -249,7 +278,7 @@ function stopCamera(){
     if(scanTimer) clearInterval(scanTimer);
     if(stream) stream.getTracks().forEach(t=>t.stop());
     stream = track = null;
-    $("video").hidden = true; $("frame").hidden = true; $("idle").hidden = false;
+    $("video").hidden = true; $("frame").hidden = true; $("band").hidden = true; $("bandHint").hidden = true; $("idle").hidden = false;
     $("idle").textContent = "Camera stopped.";
     $("btnStart").disabled = false; $("btnStop").disabled = true; $("btnTorch").disabled = true;
 }
@@ -264,7 +293,7 @@ function startScanning(){
     let found = false;
     scanTimer = setInterval(async () => {
         const v = $("video");
-        if(!v.videoWidth) return;
+        if(!v.videoWidth || mode!=="bar") return;
         try{
             const codes = await detector.detect(v);
             if(codes.length){
@@ -293,7 +322,7 @@ $("photoIn").onchange = e => {
                    : "Too low for reading - a scanner is needed.";
         tag("Photo resolution", state, `${w} x ${h} px, about ${dpi} dpi across a full A4. ${note}`);
     };
-    img.src = url; img.hidden = false;
+    img.src = url; img.hidden = false; $("photoReadRow").hidden = false;
 };
 
 /* ---------- sample count screen ---------- */
@@ -310,7 +339,7 @@ function search(){
     const q = $("q").value.trim();
     if(!q){ $("results").innerHTML=""; return; }
     const nq = norm(q), lq = q.toLowerCase();
-    const hits = PARTS.filter(([p,d]) => norm(p).includes(nq) || d.toLowerCase().includes(lq)).slice(0,6);
+    const hits = partsForSearch().filter(([p,d]) => norm(p).includes(nq) || d.toLowerCase().includes(lq)).slice(0,6);
     $("results").innerHTML = hits.length
         ? hits.map(([p,d]) => `<button class="item ${selected===p?"sel":""}" data-p="${p}"><b>${p}</b><span>${d}</span></button>`).join("")
         : `<p class="muted">No part matches "${q.replace(/</g,"&lt;")}". Check the number, or search by description.</p>`;
@@ -332,6 +361,205 @@ $("btnSave").onclick = () => {
     $("q").value=""; selected=null; $("btnSave").disabled=true; $("results").innerHTML=""; $("qty").value=1;
 };
 
+/* =========================================================
+   PART NUMBER READING
+   Read an approximate text, then match it against the known parts
+   list, tolerating the usual confusions (O/0, I/1, S/5, B/8, Z/2, G/6).
+========================================================= */
+let mode="bar", ocrWorker=null, ocrLoading=null, lastOcr=null;
+const OCR_LIB="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+
+function setMode(m){
+    mode=m;
+    $("modeBar").setAttribute("aria-pressed", m==="bar");
+    $("modeText").setAttribute("aria-pressed", m==="text");
+    const live = !!stream;
+    $("band").hidden = !(m==="text" && live);
+    $("bandHint").hidden = !(m==="text" && live);
+    $("frame").hidden = !(m==="bar" && live);
+    $("readRow").hidden = !(m==="text");
+    if(m==="text") loadOcr().catch(()=>{});
+}
+$("modeBar").onclick = () => setMode("bar");
+$("modeText").onclick = () => setMode("text");
+
+function loadScript(src){
+    return new Promise((res,rej)=>{ const sc=document.createElement("script"); sc.src=src; sc.onload=res; sc.onerror=()=>rej(new Error("Could not load "+src)); document.head.appendChild(sc); });
+}
+function loadOcr(){
+    if(ocrWorker) return Promise.resolve(ocrWorker);
+    if(ocrLoading) return ocrLoading;
+    $("ocrSec").hidden=false;
+    $("ocrStatus").textContent="Loading the text reader. The first time takes a while; after that it is cached.";
+    const t0=performance.now();
+    ocrLoading = (async()=>{
+        if(!window.Tesseract) await loadScript(OCR_LIB);
+        const w = await Tesseract.createWorker("eng");
+        await w.setParameters({
+            tessedit_char_whitelist:"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-./ ",
+            preserve_interword_spaces:"1"
+        });
+        ocrWorker=w;
+        const sec=((performance.now()-t0)/1000).toFixed(1);
+        $("ocrStatus").textContent=`Text reader ready (${sec} s to load).`;
+        tag("Text reader loaded","pass",`${sec} s on first load.`);
+        return w;
+    })().catch(e=>{
+        ocrLoading=null;
+        $("ocrStatus").textContent="The text reader could not load: "+e.message+". It needs internet the first time.";
+        tag("Text reader loaded","fail",e.message);
+        throw e;
+    });
+    return ocrLoading;
+}
+
+/* ---- known parts list ---- */
+let PARTLIST = PARTS.map(p=>({p:p[0], d:p[1]}));
+try{ const saved=JSON.parse(localStorage.getItem("countTestParts")||"null"); if(saved&&saved.length) PARTLIST=saved; }catch(e){}
+function showListInfo(){
+    const demo = PARTLIST.length===PARTS.length && PARTLIST[0].p===PARTS[0][0];
+    $("plInfo").textContent = demo ? `Demo list with ${PARTLIST.length} parts.` : `${PARTLIST.length.toLocaleString()} of your parts loaded.`;
+}
+function setList(lines){
+    const seen=new Set(), out=[];
+    for(const raw of lines){
+        const cell=(raw.split(/[,;\t]/)[0]||"").replace(/^"|"$/g,"").trim();
+        if(!cell || cell.length<3 || seen.has(cell)) continue;
+        if(/^part|^item|^code/i.test(cell)) continue;
+        seen.add(cell); out.push({p:cell, d:(raw.split(/[,;\t]/)[1]||"").replace(/^"|"$/g,"").trim()});
+    }
+    if(!out.length){ $("plInfo").textContent="No part numbers found - put one per line, part number first."; return; }
+    PARTLIST=out;
+    try{ localStorage.setItem("countTestParts", JSON.stringify(out)); }catch(e){}
+    showListInfo();
+    tag("Parts list", "pass", `${out.length} part numbers loaded for matching.`);
+}
+$("plFile").onchange = async e => { const f=e.target.files[0]; if(f) setList((await f.text()).split(/\r?\n/)); };
+$("plSave").onclick = () => setList($("plPaste").value.split(/\r?\n/));
+$("plReset").onclick = () => { PARTLIST=PARTS.map(p=>({p:p[0],d:p[1]})); try{localStorage.removeItem("countTestParts");}catch(e){} showListInfo(); };
+showListInfo();
+
+/* ---- matching ---- */
+const LOOK={O:"0",Q:"0",D:"0",I:"1",L:"1",T:"1",S:"5",B:"8",Z:"2",G:"6"};
+const key = s => s.toUpperCase().replace(/[^A-Z0-9]/g,"").replace(/[OQDILTSBZG]/g,c=>LOOK[c]);
+function lev(a,b){
+    if(a===b) return 0;
+    const m=a.length, n=b.length; if(!m) return n; if(!n) return m;
+    let prev=new Array(n+1), cur=new Array(n+1);
+    for(let j=0;j<=n;j++) prev[j]=j;
+    for(let i=1;i<=m;i++){
+        cur[0]=i;
+        for(let j=1;j<=n;j++) cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a[i-1]===b[j-1]?0:1));
+        [prev,cur]=[cur,prev];
+    }
+    return prev[n];
+}
+/* distance of part key k inside reading r: best over substrings of r of similar length */
+function fit(r,k){
+    if(r.includes(k)) return 0;
+    let best=lev(r,k);
+    for(let L=Math.max(1,k.length-2); L<=Math.min(r.length,k.length+2); L++)
+        for(let i=0;i+L<=r.length;i++) best=Math.min(best, lev(r.substr(i,L),k));
+    return best;
+}
+function match(readings){
+    const rs=readings.map(key).filter(r=>r.length>=3);
+    if(!rs.length) return [];
+    const scored=[];
+    for(const it of PARTLIST){
+        const k=it._k||(it._k=key(it.p));
+        if(k.length<3) continue;
+        let d=Infinity;
+        for(const r of rs){
+            if(Math.abs(r.length-k.length)>6 && !r.includes(k)) continue;
+            d=Math.min(d, fit(r,k));
+            if(d===0) break;
+        }
+        if(d===Infinity) continue;
+        const score=Math.max(0, 1-d/k.length);
+        if(score>=0.5) scored.push({...it, score});
+    }
+    return scored.sort((a,b)=>b.score-a.score).slice(0,3);
+}
+
+/* ---- image preparation ---- */
+function prepare(src, sx, sy, sw, sh){
+    const scale = sh<90 ? 90/sh : 1;
+    const c=document.createElement("canvas");
+    c.width=Math.round(sw*scale); c.height=Math.round(sh*scale);
+    const x=c.getContext("2d",{willReadFrequently:true});
+    x.imageSmoothingQuality="high";
+    x.drawImage(src, sx, sy, sw, sh, 0, 0, c.width, c.height);
+    const img=x.getImageData(0,0,c.width,c.height), d=img.data;
+    const hist=new Array(256).fill(0), g=new Uint8Array(c.width*c.height);
+    for(let i=0,j=0;i<d.length;i+=4,j++){ const v=(d[i]*299+d[i+1]*587+d[i+2]*114)/1000|0; g[j]=v; hist[v]++; }
+    /* Otsu threshold: dark text on a light label, or light text on a dark one */
+    let sum=0; for(let i=0;i<256;i++) sum+=i*hist[i];
+    let sB=0,wB=0,best=0,th=128; const tot=g.length;
+    for(let t=0;t<256;t++){ wB+=hist[t]; if(!wB) continue; const wF=tot-wB; if(!wF) break; sB+=t*hist[t];
+        const mB=sB/wB, mF=(sum-sB)/wF, v=wB*wF*(mB-mF)*(mB-mF); if(v>best){best=v;th=t;} }
+    let dark=0; for(const v of g) if(v<th) dark++;
+    const invert = dark > tot/2;
+    for(let i=0,j=0;i<d.length;i+=4,j++){ let on=g[j]<th; if(invert) on=!on; const v=on?0:255; d[i]=d[i+1]=d[i+2]=v; }
+    x.putImageData(img,0,0);
+    return c;
+}
+
+function showCandidates(raw, cands, ms, source){
+    $("rawText").hidden=false;
+    $("rawText").textContent = raw.trim() ? "Read: "+raw.trim() : "Read: (nothing)";
+    lastOcr={raw:raw.trim(), top:cands[0]?cands[0].p:"", score:cands[0]?Math.round(cands[0].score*100):0, ms, source};
+    $("cands").innerHTML = cands.length
+        ? cands.map((c,i)=>`<button class="cand ${i===0?"top":""}" data-p="${c.p.replace(/"/g,"&quot;")}"><div><b>${c.p}</b><br><span>${c.d||""}</span></div><span class="score">${Math.round(c.score*100)}%</span></button>`).join("")
+        : `<p class="muted">No part in your list is close to this reading. Move closer, fill the box with the number only, or type the last characters in the count screen.</p>`;
+    $("cands").querySelectorAll(".cand").forEach(b=>b.onclick=()=>{
+        $("q").value=b.dataset.p; search();
+        const hit=PARTLIST.find(x=>x.p===b.dataset.p); if(hit){ selected=hit.p; $("btnSave").disabled=false; }
+        $("ctH").scrollIntoView({behavior:"smooth"});
+    });
+    $("ocrStatus").textContent = `Done in ${(ms/1000).toFixed(1)} s. Tap the right part to count it.`;
+    tag(`Part number from ${source}`, cands.length ? (cands[0].score>=0.85?"pass":"warn") : "fail",
+        cands.length ? `read "${raw.trim()}" -> ${cands[0].p} (${Math.round(cands[0].score*100)}%) in ${(ms/1000).toFixed(1)} s` : `read "${raw.trim()}" - no match`);
+}
+
+$("btnRead").onclick = async () => {
+    if(!stream){ $("ocrSec").hidden=false; $("ocrStatus").textContent="Start the camera first."; return; }
+    const w = await loadOcr().catch(()=>null); if(!w) return;
+    const v=$("video"), vp=$("viewport").getBoundingClientRect(), band=$("band").getBoundingClientRect();
+    /* map the yellow box from the screen to video pixels (the video is shown with object-fit: cover) */
+    const sc=Math.max(vp.width/v.videoWidth, vp.height/v.videoHeight);
+    const ox=(vp.width - v.videoWidth*sc)/2, oy=(vp.height - v.videoHeight*sc)/2;
+    const sx=(band.left-vp.left-ox)/sc, sy=(band.top-vp.top-oy)/sc, sw=band.width/sc, sh=band.height/sc;
+    const t0=performance.now();
+    const crop=prepare(v, sx, sy, sw, sh);
+    const cv=$("cropView"); cv.width=crop.width; cv.height=crop.height; cv.getContext("2d").drawImage(crop,0,0); cv.hidden=false;
+    $("ocrStatus").textContent="Reading...";
+    await w.setParameters({tessedit_pageseg_mode:"7"});
+    const {data}=await w.recognize(crop);
+    const raw=data.text||"";
+    const parts=[raw, raw.replace(/\s+/g,"")].concat(raw.split(/\s+/));
+    showCandidates(raw, match(parts), performance.now()-t0, "live camera");
+};
+
+$("btnPhotoRead").onclick = async () => {
+    const w = await loadOcr().catch(()=>null); if(!w) return;
+    const img=$("photo");
+    const t0=performance.now();
+    const maxSide=2000, f=Math.min(1, maxSide/Math.max(img.naturalWidth,img.naturalHeight));
+    const c=document.createElement("canvas"); c.width=img.naturalWidth*f|0; c.height=img.naturalHeight*f|0;
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    $("ocrSec").hidden=false; $("ocrStatus").textContent="Reading the whole photo...";
+    await w.setParameters({tessedit_pageseg_mode:"11"});
+    const {data}=await w.recognize(c);
+    const words=(data.words||[]).map(x=>x.text).filter(Boolean);
+    const lines=(data.lines||[]).map(x=>x.text).filter(Boolean);
+    const pairs=[]; for(let i=0;i+1<words.length;i++) pairs.push(words[i]+words[i+1]);
+    showCandidates(lines.join(" | ")||data.text||"", match(words.concat(pairs, lines)), performance.now()-t0, "photo");
+};
+
+/* keep the count screen search in step with the loaded list */
+function partsForSearch(){ return PARTLIST.map(x=>[x.p,x.d||""]); }
+
 /* ---------- report ---------- */
 $("btnCopy").onclick = async () => {
     try{ await navigator.clipboard.writeText($("report").textContent); $("btnCopy").textContent="Copied"; }
@@ -343,6 +571,5 @@ $("btnCopy").onclick = async () => {
     setTimeout(()=>$("btnCopy").textContent="Copy test report",1500);
 };
 </script>
-
-
-</body></html>
+</body>
+</html>
